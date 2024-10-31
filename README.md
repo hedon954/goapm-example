@@ -1,6 +1,6 @@
 # goapm-example
 
-goapm-example is a simple example for goapm.
+`goapm-example` is a simple example for [goapm](https://github.com/hedon954/goapm).
 
 ## Architecture
 ![architecture](https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241031195051363.png)
