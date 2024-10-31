@@ -6,8 +6,6 @@ repos:
       - id: end-of-file-fixer # remove EOF of your whole files project.
         files: \.go$
       - id: check-yaml # fix yaml format file.
-      - id: check-added-large-files # let you know which file has large file size.
-        exclude: zscripts/setup/grafana/data/grafana.db
   - repo: https://github.com/dnephin/pre-commit-golang
     rev: v0.5.1
     hooks:
