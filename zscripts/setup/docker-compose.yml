@@ -1,0 +1,138 @@
+# if io timeout: https://github.com/docker/for-mac/issues/6621
+
+services:
+  apm-mysql:
+    image: mysql:9.0.1
+    container_name: apm-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - ./volumes/mysql/data:/var/lib/mysql
+      - ./volumes/mysql/logs:/var/log/mysql
+    restart: always
+  apm-redis:
+    image: redis:7.4.0
+    container_name: apm-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./volumes/redis/data:/data
+      - ./volumes/redis/logs:/var/log/redis
+    restart: always
+  apm-jaeger:
+    image: jaegertracing/all-in-one:1.52
+    container_name: apm-jaeger
+    restart: always
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - COLLECTOR_OTLP_GRPC_HOST_PORT=0.0.0.0:4317
+      - COLLECTOR_OTLP_HTTP_HOST_PORT=0.0.0.0:4318
+      - LOG_LEVEL=debug
+    ports:
+      - 16686:16686
+      - 14268:14268
+      - 14250:14250
+  apm-otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.111.0
+    container_name: apm-otel-collector
+    volumes:
+      - ./otel-collector-config.yml:/etc/otelcol-contrib/config.yaml
+    ports:
+      - 1888:1888 # pprof extension
+      - 8888:8888 # Prometheus metrics exposed by the Collector
+      - 8889:8889 # Prometheus exporter metrics
+      - 13133:13133 # health_check extension
+      - 4317:4317 # OTLP gRPC receiver
+      - 4318:4318 # OTLP HTTP receiver
+      - 55679:55679 # zpages extension
+  apm-grafana:
+    image: grafana/grafana:11.2.2
+    container_name: apm-grafana
+    restart: always
+    ports:
+      - 3000:3000
+    volumes:
+      - ./volumes/grafana/data:/var/lib/grafana
+      - ./volumes/grafana/logs:/var/log/grafana
+  apm-prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: apm-prometheus
+    restart: always
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+  apm-ubuntu:
+    image: ubuntu:24.04
+    container_name: apm-ubuntu
+    restart: always
+    volumes:
+      - "./build:/build"
+      - "./start-services.sh:/start-services.sh"
+      - "./volumes/logs:/logs"
+    ports:
+      - 30001:30001
+      - 30002:30002
+      - 30003:30003
+      - 30004:30004
+      - 30012:30012
+      - 30013:30013
+    working_dir: /build
+    command: ["/bin/bash", "/start-services.sh"]
+    environment:
+      - MYSQL_HOST=apm-mysql
+      - REDIS_HOST=apm-redis
+    depends_on:
+      - apm-mysql
+      - apm-redis
+      - apm-jaeger
+      - apm-otel-collector
+      - apm-grafana
+      - apm-prometheus
+  apm-elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.2
+    container_name: apm-elasticsearch
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - 9200:9200
+  apm-kibana:
+    image: docker.elastic.co/kibana/kibana:7.14.2
+    container_name: apm-kibana
+    restart: always
+    environment:
+      - ELASTICSEARCH_HOSTS=http://apm-elasticsearch:9200
+    depends_on:
+      - apm-elasticsearch
+    ports:
+      - 5601:5601
+    volumes:
+      - ./volumes/kibana/data:/usr/share/kibana/data
+  apm-filebeat:
+    image: docker.elastic.co/beats/filebeat:7.14.2
+    container_name: apm-filebeat
+    user: root
+    restart: always
+    volumes:
+      - ./volumes/logs:/logs
+      - ./logcollect:/logcollect
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
+    command: filebeat -e -d "*"
+    depends_on:
+      - apm-elasticsearch
+  apm-logstash:
+    image: docker.elastic.co/logstash/logstash:7.14.2
+    container_name: apm-logstash
+    restart: always
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - 5044:5044
+    depends_on:
+      - apm-elasticsearch
+    mem_reservation: 1000M
+    cpu_count: 1

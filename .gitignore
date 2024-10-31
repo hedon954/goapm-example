@@ -1,0 +1,16 @@
+.idea
+.vscode/**
+main
+**coverage.out*
+*groups-*.json
+.DS_Store
+
+# docker volumes
+volumes/
+zscripts/setup/build/
+
+logs/
+
+# binary files
+
+# config file
