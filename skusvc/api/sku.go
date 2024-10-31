@@ -13,17 +13,18 @@ import (
 
 type SkuService struct {
 	protos.UnimplementedSkuServiceServer
+	Dao *dao.SkuDao
 }
 
 func (s *SkuService) DecreaseStock(ctx context.Context, req *protos.Sku) (*protos.Sku, error) {
 	// 获取商品信息
-	info := dao.SkuDao.Get(ctx, req.Id)
+	info := s.Dao.Get(ctx, req.Id)
 	if len(info) == 0 {
 		return nil, status.Errorf(codes.NotFound, "sku not found")
 	}
 
 	// 进行扣减看库存
-	res, err := dao.SkuDao.Decr(ctx, req.Id, req.Num)
+	res, err := s.Dao.Decr(ctx, req.Id, req.Num)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "decrease stock failed: %v", err)
 	}

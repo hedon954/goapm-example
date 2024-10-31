@@ -1,25 +1,28 @@
 package api
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/google/uuid"
-	"github.com/hedon954/goapm"
+	"github.com/hedon954/goapm/apm"
+	"github.com/spf13/cast"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/hedon954/goapm-example/ordersvc/grpcclient"
 	"github.com/hedon954/goapm-example/ordersvc/metric"
 	"github.com/hedon954/goapm-example/protos"
-	"github.com/spf13/cast"
 )
 
-type order struct {
+type Order struct {
+	Tracer trace.Tracer
+	DB     *sql.DB
 }
 
-var Order = &order{}
-
-func (o *order) Add(w http.ResponseWriter, request *http.Request) {
-	ctx, span := dogapm.Tracer.Start(request.Context(), "order.Add-Start")
+func (o *Order) Add(w http.ResponseWriter, request *http.Request) {
+	ctx, span := o.Tracer.Start(request.Context(), "order.Add-Start")
 	defer span.End()
 
 	// get request body
@@ -35,16 +38,16 @@ func (o *order) Add(w http.ResponseWriter, request *http.Request) {
 		Id: int64(uid),
 	})
 	if err != nil {
-		dogapm.Logger.Error(ctx, "get user info from user service", map[string]any{
+		apm.Logger.Error(ctx, "get user info from user service", err, map[string]any{
 			"uid":    uid,
 			"sku_id": skuID,
 			"num":    num,
-		}, err)
-		dogapm.HttpStatus.Error(w, err.Error(), nil)
+		})
+		HttpStatus.Error(w, err.Error(), nil)
 		return
 	}
 	if userInfo.Id == 0 {
-		dogapm.HttpStatus.Error(w, "user not found from user service", nil)
+		HttpStatus.Error(w, "user not found from user service", nil)
 		return
 	}
 
@@ -54,26 +57,26 @@ func (o *order) Add(w http.ResponseWriter, request *http.Request) {
 		Num: num,
 	})
 	if err != nil {
-		dogapm.Logger.Error(ctx, "createOrder", map[string]any{
+		apm.Logger.Error(ctx, "createOrder", err, map[string]any{
 			"sku_id": skuID,
 			"num":    num,
-		}, err)
-		dogapm.HttpStatus.Error(w, err.Error(), nil)
+		})
+		HttpStatus.Error(w, err.Error(), nil)
 		return
 	}
 
 	// create order
-	_, err = dogapm.Infra.DB.ExecContext(ctx,
+	_, err = o.DB.ExecContext(ctx,
 		"INSERT INTO `t_order` (`order_id`, `sku_id`, `num`, `price`, `uid`) VALUES (?, ?, ?, ?, ?)",
 		uuid.NewString(), skuID, num, res.Price, uid,
 	)
 	if err != nil {
-		dogapm.Logger.Error(ctx, "createOrder", map[string]any{
+		apm.Logger.Error(ctx, "createOrder", err, map[string]any{
 			"uid":    uid,
 			"sku_id": skuID,
 			"num":    num,
-		}, err)
-		dogapm.HttpStatus.Error(w, err.Error(), nil)
+		})
+		HttpStatus.Error(w, err.Error(), nil)
 		return
 	}
 
@@ -82,5 +85,5 @@ func (o *order) Add(w http.ResponseWriter, request *http.Request) {
 	log.Println("order success", skuID)
 
 	// return
-	dogapm.HttpStatus.Ok(w)
+	HttpStatus.Ok(w)
 }

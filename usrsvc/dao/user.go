@@ -2,19 +2,22 @@ package dao
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/hedon954/goapm"
+	"github.com/hedon954/goapm/apm"
+	"github.com/redis/go-redis/v9"
 )
 
-type userDao struct{}
+type UserDao struct {
+	DB  *sql.DB
+	RDB *redis.Client
+}
 
-var UserDao = new(userDao)
-
-func (u *userDao) Get(ctx context.Context, uid int64) map[string]any {
-	userCache := dogapm.Infra.RDB.Get(ctx, userKey(uid)).Val()
+func (dao *UserDao) Get(ctx context.Context, uid int64) map[string]any {
+	userCache := dao.RDB.Get(ctx, userKey(uid)).Val()
 	if userCache != "" {
 		userInfo := make(map[string]any)
 		err := json.Unmarshal([]byte(userCache), &userInfo)
@@ -23,28 +26,28 @@ func (u *userDao) Get(ctx context.Context, uid int64) map[string]any {
 		}
 	}
 
-	dogapm.Logger.Debug(ctx, "userDao.Get", map[string]any{
+	apm.Logger.Debug(ctx, "userDao.Get", map[string]any{
 		"uid": uid,
 	})
 
-	raw, err := dogapm.Infra.DB.QueryContext(ctx,
+	raw, err := dao.DB.QueryContext(ctx,
 		"select * from `t_user` where id = ?", uid)
 	if err != nil {
-		dogapm.Logger.Error(ctx, "userDao.Get", map[string]any{
+		apm.Logger.Error(ctx, "userDao.Get", err, map[string]any{
 			"uid": uid,
-		}, err)
+		})
 		return nil
 	}
-	info := dogapm.DBUtils.QueryFirst(raw, raw.Err())
+	info := apm.DBUtils.QueryFirst(raw, raw.Err())
 
-	dogapm.Logger.Debug(ctx, "userDao.Get", map[string]any{
+	apm.Logger.Debug(ctx, "userDao.Get", map[string]any{
 		"info": info,
 	})
 
 	if info != nil {
 		userInfo, err := json.Marshal(info)
 		if err == nil {
-			dogapm.Infra.RDB.Set(ctx, userKey(uid), string(userInfo), time.Minute*10)
+			dao.RDB.Set(ctx, userKey(uid), string(userInfo), time.Minute*10)
 		}
 	}
 

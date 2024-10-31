@@ -3,7 +3,7 @@
 set -e
 
 # Array of service directories
-services=("dogalarm" "dogapm" "ordersvc" "skusvc" "usrsvc" "protos")
+services=("ordersvc" "skusvc" "usrsvc" "protos")
 
 # Loop through each service and run tests
 for service in "${services[@]}"; do

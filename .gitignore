@@ -11,6 +11,8 @@ zscripts/setup/build/
 
 logs/
 
+!volumes/grafana/
+
 # binary files
 
 # config file

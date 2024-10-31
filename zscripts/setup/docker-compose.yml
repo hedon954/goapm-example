@@ -1,9 +1,9 @@
 # if io timeout: https://github.com/docker/for-mac/issues/6621
 
 services:
-  apm-mysql:
+  goapm-mysql:
     image: mysql:9.0.1
-    container_name: apm-mysql
+    container_name: goapm-mysql
     ports:
       - "3306:3306"
     environment:
@@ -12,18 +12,18 @@ services:
       - ./volumes/mysql/data:/var/lib/mysql
       - ./volumes/mysql/logs:/var/log/mysql
     restart: always
-  apm-redis:
+  goapm-redis:
     image: redis:7.4.0
-    container_name: apm-redis
+    container_name: goapm-redis
     ports:
       - "6379:6379"
     volumes:
       - ./volumes/redis/data:/data
       - ./volumes/redis/logs:/var/log/redis
     restart: always
-  apm-jaeger:
+  goapm-jaeger:
     image: jaegertracing/all-in-one:1.52
-    container_name: apm-jaeger
+    container_name: goapm-jaeger
     restart: always
     environment:
       - COLLECTOR_OTLP_ENABLED=true
@@ -34,9 +34,9 @@ services:
       - 16686:16686
       - 14268:14268
       - 14250:14250
-  apm-otel-collector:
+  goapm-otel-collector:
     image: otel/opentelemetry-collector-contrib:0.111.0
-    container_name: apm-otel-collector
+    container_name: goapm-otel-collector
     volumes:
       - ./otel-collector-config.yml:/etc/otelcol-contrib/config.yaml
     ports:
@@ -47,26 +47,26 @@ services:
       - 4317:4317 # OTLP gRPC receiver
       - 4318:4318 # OTLP HTTP receiver
       - 55679:55679 # zpages extension
-  apm-grafana:
+  goapm-grafana:
     image: grafana/grafana:11.2.2
-    container_name: apm-grafana
+    container_name: goapm-grafana
     restart: always
     ports:
       - 3000:3000
     volumes:
-      - ./volumes/grafana/data:/var/lib/grafana
-      - ./volumes/grafana/logs:/var/log/grafana
-  apm-prometheus:
+      - ./grafana/data:/var/lib/grafana
+      - ./grafana/logs:/var/log/grafana
+  goapm-prometheus:
     image: prom/prometheus:v2.54.1
-    container_name: apm-prometheus
+    container_name: goapm-prometheus
     restart: always
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - 9090:9090
-  apm-ubuntu:
+  goapm-ubuntu:
     image: ubuntu:24.04
-    container_name: apm-ubuntu
+    container_name: goapm-ubuntu
     restart: always
     volumes:
       - "./build:/build"
@@ -85,36 +85,36 @@ services:
       - MYSQL_HOST=apm-mysql
       - REDIS_HOST=apm-redis
     depends_on:
-      - apm-mysql
-      - apm-redis
-      - apm-jaeger
-      - apm-otel-collector
-      - apm-grafana
-      - apm-prometheus
-  apm-elasticsearch:
+      - goapm-mysql
+      - goapm-redis
+      - goapm-jaeger
+      - goapm-otel-collector
+      - goapm-grafana
+      - goapm-prometheus
+  goapm-elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.14.2
-    container_name: apm-elasticsearch
+    container_name: goapm-elasticsearch
     restart: always
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ports:
       - 9200:9200
-  apm-kibana:
+  goapm-kibana:
     image: docker.elastic.co/kibana/kibana:7.14.2
-    container_name: apm-kibana
+    container_name: goapm-kibana
     restart: always
     environment:
-      - ELASTICSEARCH_HOSTS=http://apm-elasticsearch:9200
+      - ELASTICSEARCH_HOSTS=http://goapm-elasticsearch:9200
     depends_on:
-      - apm-elasticsearch
+      - goapm-elasticsearch
     ports:
       - 5601:5601
     volumes:
-      - ./volumes/kibana/data:/usr/share/kibana/data
-  apm-filebeat:
+      - ./kibana/data:/usr/share/kibana/data
+  goapm-filebeat:
     image: docker.elastic.co/beats/filebeat:7.14.2
-    container_name: apm-filebeat
+    container_name: goapm-filebeat
     user: root
     restart: always
     volumes:
@@ -123,16 +123,16 @@ services:
       - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
     command: filebeat -e -d "*"
     depends_on:
-      - apm-elasticsearch
-  apm-logstash:
+      - goapm-elasticsearch
+  goapm-logstash:
     image: docker.elastic.co/logstash/logstash:7.14.2
-    container_name: apm-logstash
+    container_name: goapm-logstash
     restart: always
     volumes:
       - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
     ports:
       - 5044:5044
     depends_on:
-      - apm-elasticsearch
+      - goapm-elasticsearch
     mem_reservation: 1000M
     cpu_count: 1

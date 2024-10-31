@@ -7,16 +7,17 @@ repos:
         files: \.go$
       - id: check-yaml # fix yaml format file.
       - id: check-added-large-files # let you know which file has large file size.
+        exclude: zscripts/setup/grafana/data/grafana.db
   - repo: https://github.com/dnephin/pre-commit-golang
     rev: v0.5.1
     hooks:
       - id: go-mod-tidy # run go mod tidy -v.
   - repo: https://github.com/golangci/golangci-lint # golangci-lint hook repo
-    rev: v1.60.3 # golangci-lint hook repo revision
+    rev: v1.61.0 # golangci-lint hook repo revision
     hooks:
       - id: golangci-lint
         stages: [ pre-commit ]
-        language_version: 1.22.3
+        language_version: 1.23.2
         entry: bash -c 'go list -f '{{.Dir}}/...' -m | xargs golangci-lint run'
   - repo: local
     hooks:
