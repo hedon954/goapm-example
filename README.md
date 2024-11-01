@@ -5,6 +5,24 @@
 ## Architecture
 ![architecture](https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241031195051363.png)
 
+
+## Requirements
+
+- `Go`: 1.23.2 or later
+- `Docker` installed
+- `Make` installed
+- Make sure the following ports are not occupied
+  - `30001`/`30002`/`30003`/`30004`/`30012`/`30013`: `order`/`user`/`sku` service
+  - `1888`/`8888`/`8889`/`13133`/`4317`/`4318`/`55678`: `otel-collector`
+  - `3306`: `MySQL`
+  - `6379`: `Redis`
+  - `16686`/`14268`/`14250`: `Jaeger`
+  - `3000`: `Grafana`
+  - `9090`: `Prometheus`
+  - `5601`: `Kibana`
+  - `9200`: `Elasticsearch`
+  - `5044`: `Logstash`
+
 ## Quick Start
 
 Start the base infrastructures and services:
