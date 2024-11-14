@@ -3,7 +3,7 @@
 `goapm-example` is a simple example for [goapm](https://github.com/hedon954/goapm).
 
 ## Architecture
-![architecture](https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241031195051363.png)
+![architecture](./assets/imgs/architecture.png)
 
 
 ## Requirements
@@ -54,19 +54,19 @@ curl http://127.0.0.1:30001/order/add?uid=1000000&sku_id=3&num=1
 ## Effect Pictures
 
 ### Grafana
-![Grafana-MySQL](https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241031185641444.png)
+![Grafana-MySQL](./assets/imgs/grafana-mysql.png)
 
-![Grafana-Biz](https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241031185718137.png)
+![Grafana-Biz](./assets/imgs/grafana-biz.png)
 
-![Application-Trafiic](https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241031185748259.png)
+![Application-Trafiic](./assets/imgs/grafana-traffic.png)
 
-![Application-Runtime](https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241031185807108.png)
+![Application-Runtime](./assets/imgs/grafana-runtime.png)
 
-![Application-GOX](https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241031185826969.png)
+![Application-GOX](./assets/imgs/grafana-gox.png)
 
 ### Jaeger
-![Jaeger-Trace](https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241031190013255.png)
+![Jaeger-Trace](./assets/imgs/jaeger-trace.png)
 
 
 ### Prometheus
-![Prometheus](https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241031190039185.png)
+![Prometheus](./assets/imgs/prometheus.png)
